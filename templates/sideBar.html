@@ -1,0 +1,29 @@
+<div class="col-sm-3 sidenav hidden-xs">
+  <h2>Logo</h2>
+  <ul class="nav nav-pills nav-stacked">
+    <li class="dropdown">
+      <a class="dropdown-toggle" data-toggle="dropdown">Sales <span class="caret"></span></a>
+      <ul class="dropdown-menu">
+        <li  class="active"><a href="{% url 'saleInit' %}">Sales</a></li>
+        <li><a href="{% url 'saleHis' %}">Sale History</a></li>
+      </ul>
+    </li>
+    <li><a href="{% url 'productInit' %}">Products</a></li>
+    <li class="dropdown">
+      <a class="dropdown-toggle" data-toggle="dropdown">Purchase <span class="caret"></span></a>
+      <ul class="dropdown-menu">
+        <li><a href="{% url 'purchaseInit' %}">Purchase</a></li>
+        <li><a href="{% url 'orderList' %}">Purchase Cart</a></li>
+        <li><a href="{% url 'purchaseHis' %}">Purchase History</a></li>
+      </ul>
+    </li>
+    <li><a href="{% url 'customer_init' %}">Customers</a></li>
+    <li class="dropdown">
+      <a class="dropdown-toggle" data-toggle="dropdown" href="#">Returns <span class="caret"></span></a>
+      <ul class="dropdown-menu">
+        <li><a href="#">Vendor</a></li>
+        <li><a href="#">Customer</a></li>
+      </ul>
+    </li>
+  </ul><br>
+</div>

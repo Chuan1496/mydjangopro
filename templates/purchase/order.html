@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Inventory System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {
+      height: 550px
+    }
+
+    /* Set gray background color and 100% height */
+    .sidenav {
+      background-color: #f1f1f1;
+      height: 100%;
+      width: 16%;
+    }
+
+    /* On small screens, set height to 'auto' for the grid */
+    @media screen and (max-width: 767px) {
+      .row.content {
+          height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script type="text/javascript">
+    function collectSelectedData() {
+      var selectedPrices = [];
+      var selectedQtys = [];
+      var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+      var i = 0
+      checkboxes.forEach(function(checkbox) {
+        if (checkbox.checked) {
+          var rowId = checkbox.value;
+          var selectedQty = document.getElementById("inputQty_" + rowId).value;
+          var selectedPrice = document.getElementById("hiddenPrice_" + rowId).value;
+
+          selectedPrices.push(selectedPrice);
+          selectedQtys.push(selectedQty);
+        }
+      });
+      document.getElementsByName("selectedPrice")[0].value = selectedPrices;
+      document.getElementsByName("selectedQty")[0].value = selectedQtys;
+    }
+  </script>
+  <div class="container-fluid">
+    <div class="row content">
+      <!-- Include sideBar -->
+      {% include "sideBar.html" %}
+      <br>
+      <div class="col-sm-9">
+        <h3>Cart</h3>
+        <form class="form-group" action="{% url 'orderList' %}" method="post">
+          {% csrf_token %}
+          <div class="form-inline">
+            <div class="form-group">
+              <label>Category:</label>
+              <select class="form-control" id="selectedCate" name="selectedCate">
+                <option value="">-- Select Category --</option>
+                {% for cate in cateList %}
+                <option value="{{ cate.id }}" {% if cate.id == searchCate %}selected{% endif %}>{{ cate.CategoryName }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Supplier:</label>
+              <select class="form-control" id="selectedSup" name="selectedSup">
+                <option value="">-- Select Supplier --</option>
+                {% for sup in supplierList %}
+                <option value="{{ sup.id }}" {% if sup.id == searchSup %}selected{% endif %}>{{ sup.SupplierName }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <br>
+          <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+        <br>
+        <form action="{% url 'doOrder' %}" method="post">
+          {% csrf_token %}
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Brand</th>
+                <th>Supplier</th>
+                <th>In Stock</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Selection</th>
+              </tr>
+            </thead>
+              <tbody>
+                {% for i in orderList %}
+                <tr>
+                  <td>{{i.0}}</td>
+                  <td>{{i.1}}</td>
+                  <td>{{i.2}}</td>
+                  <td>{{i.3}}</td>
+                  <td>{{i.4}}</td>
+                  <td>{{i.5}}</td>
+                  <td>
+                    {{i.6}}
+                    <input type="hidden" id="hiddenPrice_{{ i.0 }}" name="hiddenPrice_{{ i.0 }}" value="{{ i.6 }}">
+                  </td>
+                  <td>
+                    <select id="inputQty_{{ i.0 }}" name="inputQty_{{ i.0 }}">
+                      {% for j in qtyList %}
+                        <option value="{{ j }}" {% if j == i.7 %}selected{% endif %}>{{ j }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td>{{i.8}}</td>
+                  <td>
+                    <div class="form-check">
+                      <input type="checkbox" value="{{ i.0 }}" id="selectedBox" name="selectedBox">
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+          </table>
+          <input type="hidden" name="selectedPrice">
+          <input type="hidden" name="selectedQty">
+          <button type="submit" class="btn btn-primary" onclick="collectSelectedData()">Order</button>
+          <button type="submit" class="btn btn-primary" formaction="{% url 'doDelete' %}">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

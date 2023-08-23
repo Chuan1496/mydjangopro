@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Inventory System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {
+      height: 550px
+    }
+
+    /* Set gray background color and 100% height */
+    .sidenav {
+      background-color: #f1f1f1;
+      height: 100%;
+      width: 16%;
+    }
+
+    /* On small screens, set height to 'auto' for the grid */
+    @media screen and (max-width: 767px) {
+      .row.content {
+          height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row content">
+      <!-- Include sideBar -->
+      {% include "sideBar.html" %}
+      <br>
+      <div class="col-sm-9">
+        <h2>Add Product</h2>
+        {{msg}}
+        <form action="{% url 'doSave' %}" method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="selectedCate">Category</label>
+            <select class="form-control" id="selectedCate" name="selectedCate">
+              <option value="">-- Select Category --</option>
+              {% for cate in cateList %}
+              <option value="{{ cate.id }}">{{ cate.CategoryName }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="inputName">Product Name</label>
+              <input type="text" class="form-control" id="inputName" name="inputName" placeholder="Name">
+            </div>
+            <div class="form-group col-md-6">
+              <label for="currentId">Product ID</label>
+              <input type="text" class="form-control" id="currentID" name="currentID" placeholder="ID">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="selectedBrand">Brand</label>
+              <select class="form-control" id="selectedBrand" name="selectedBrand">
+                <option value="">-- Select Brand --</option>
+                {% for brand in brandList %}
+                <option value="{{ brand.id }}">{{ brand.BrandName }}</option>
+                {% endfor %}
+            </select>
+            </div>
+            <div class="form-group col-md-6">
+              <label for="selectedSup">Supplier</label>
+              <select class="form-control" id="selectedSup" name="selectedSup">
+                <option value="">-- Select Supplier --</option>
+                {% for sup in supplierList %}
+                <option value="{{ sup.id }}">{{ sup.SupplierName }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="inputCost">Cost</label>
+              <input type="text" class="form-control" id="inputCost" name="inputCost" placeholder="NT">
+            </div>
+            <div class="form-group col-md-6">
+              <label for="inputPrice">Price</label>
+              <input type="text" class="form-control" id="inputPrice" name="inputPrice" placeholder="NT">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="inputDetail">Description / Product Details</label>
+            <input type="text" class="form-control" id="inputDetail" placeholder="Details">
+          </div>
+          <button type="submit" class="btn btn-primary">Add Product</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
