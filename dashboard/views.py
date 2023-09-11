@@ -1,4 +1,3 @@
-from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from product.models import Product
 from product.models import Category
@@ -8,6 +7,11 @@ from dashboard.models import stock, predict, weekPredict
 from dashboard.models import purchase
 import mysql.connector
 import datetime
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+from keras.models import Sequential
+from keras.layers import LSTM, Dense
 # Create your views here.
 def purchaseInit(request):
     context = {}
@@ -35,7 +39,7 @@ def purchaseInit(request):
         stock.quantity AS qty
     FROM
         inventory.product as prod
-    INNER JOIN
+    left JOIN
         inventory.stock as stock ON prod.id = stock.ProdID
     left JOIN
         inventory.category as cate ON prod.CategoryID = cate.id
@@ -112,8 +116,8 @@ def doPurchase(request,pk):
 
     today = datetime.datetime.today()
     weekday = today.weekday()
-    context['todayPred'] = data[weekday] # today's sale qty
-    context['salePred'] = data[weekday+1] + data[weekday+2] # the sale qty in the next two days
+    context['todayPred'] = "{:.2f}".format(data[weekday]) # today's sale qty
+    context['salePred'] = "{:.2f}".format(data[weekday+1] + data[weekday+2]) # the sale qty in the next two days
     #Product's inventory and purchase Info
     purchaseList = purchase.objects.filter(ProdID=pk, status='D')
     deliverQty = 0
@@ -123,7 +127,10 @@ def doPurchase(request,pk):
     context['deliverQty'] = deliverQty
     saleResult = deliverQty + prodStock.quantity - (data[weekday+1] + data[weekday+2])
     if saleResult < 0 or weekday == 4:
-        context['reccomQty'] = weeklyPredict.quantity
+        if weeklyPredict.quantity < 10:
+            context['reccomQty'] = 10
+        else:
+            context['reccomQty'] = weeklyPredict.quantity
     else:
         context['reccomQty'] = 0
     return render(request, 'purchase/purchase.html', context)
@@ -291,7 +298,54 @@ def editStatus(request, pk):
     return redirect('purchaseHis')
 
 def doPredict(request, pk):
+    # Load the dataset
+    url = 'https://drive.google.com/file/d/1CFGtNc6alDjdijQ7i2ytViORqy_S64Bw/view?usp=sharing'
+    url = 'https://drive.google.com/uc?id=' + url.split('/')[-2]
+    df = pd.read_csv(url)  # Replace 'your_dataset.csv' with the actual file path or URL
 
+    # seperate dates for future plotting
+    dates = pd.to_datetime(df['Date'])
 
+    # Extract the relevant features
+    data = df[['Holiday', 'Season', 'Month', 'Quantity']].values
 
-    return redirect('doPurchase')
+    # Scale the data
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    data_scaled = scaler.fit_transform(data)
+
+    # Split into input (features) and output (demand) variables
+    features = data_scaled[:, :-1]
+    demand = data_scaled[:, -1]
+
+    # Split the data into train and test sets
+    train_features = features[:-1]
+    train_demand = demand[:-1]
+
+    # Reshape the input data for LSTM
+    # Reshape the features data to match LSTM input shape (samples, time steps, features)
+    n_features = features.shape[1]
+    train_features = train_features.reshape((train_features.shape[0], 1, n_features))
+    # Build and train the LSTM model
+    # Build the LSTM model
+    model = Sequential()
+    model.add(LSTM(50, activation='relu', input_shape=(1, n_features)))
+    model.add(Dense(1))
+    model.compile(optimizer='adam', loss='mse')
+
+    # Train the model
+    model.fit(train_features, train_demand, epochs=50, batch_size=16, verbose=1)
+
+    # Read the features for the next week
+    next_week_features = features[-1:]
+
+    # Reshape the features for the LSTM input shape
+    next_week_features_reshaped = next_week_features.reshape((next_week_features.shape[0], 1, n_features))
+
+    # Make a prediction for the next week's demand
+    next_week_prediction = model.predict(next_week_features_reshaped)
+
+    # Inverse scale the prediction
+    next_week_demand = scaler.inverse_transform(np.concatenate((next_week_features.reshape(next_week_features.shape[0], -1), next_week_prediction), axis=1))[:,-1]
+
+    weekPredict.objects.filter(ProdID=pk).update(quantity=next_week_demand)
+    return redirect('doPurchase', pk=pk)

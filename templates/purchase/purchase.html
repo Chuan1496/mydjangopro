@@ -132,6 +132,11 @@
             <p class="text-dark" style="font-size: 18px;">
               <span class="text-primary">{{salePred}} </span>items will be sold in next two days
             </p>
+            <br><br><br><br>
+            <form action="{% url 'doPredict' prodInfo.id %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary">Make Prediction</button>
+            </form>
           </div>
         </div>
         <script type="text/javascript">
